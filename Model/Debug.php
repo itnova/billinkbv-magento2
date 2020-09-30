@@ -3,26 +3,32 @@
 namespace Billink\Billink\Model;
 
 use Billink\Billink\Logger\Handler\BillinkTraces;
+use Magento\Framework\App\RequestInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 
-class Debug
+class Debug extends \Monolog\Logger
 {
-    /** @var BillinkTraces */
-    private $logger;
-
     public function __construct(
-        BillinkTraces $logger
+        BillinkTraces $logger,
+        RequestInterface $request
     ) {
-        $this->logger = $logger;
+        parent::__construct("BillinkTracer", [$logger]);
+        $this->request = $request;
     }
 
-    public function trace(OrderInterface $order)
+    private function debugEnabled(): bool {
+        return true; //TODO
+    }
+
+    public function trace()
     {
         if (!$this->debugEnabled()) {
             return;
         }
 
-        $this->logger->write(["AAAA"]);
-        die("HOI");
+        $this->debug($this->request->getMethod() . " .: " . $this->request->getRequestString());
+
+        $traces = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $this->debug(print_r($traces, true));
     }
 }

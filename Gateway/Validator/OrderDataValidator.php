@@ -8,6 +8,7 @@ use Billink\Billink\Gateway\Helper\Gateway as GatewayHelper;
 use Billink\Billink\Gateway\Helper\SubjectReader;
 use Billink\Billink\Gateway\Helper\Workflow as WorkflowHelper;
 use Billink\Billink\Helper\Number as NumberHelper;
+use Billink\Billink\Model\Debug;
 use Billink\Billink\Observer\DataAssignObserver;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Command\GatewayCommand;
@@ -83,7 +84,8 @@ class OrderDataValidator extends \Magento\Payment\Gateway\Validator\AbstractVali
         WorkflowHelper $workflowHelper,
         NumberHelper $numberHelper,
         Calculator $orderTotalCalculator,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        Debug $debug
     ) {
         $this->config = $config;
         $this->checkCommand = $checkCommand;
@@ -93,6 +95,7 @@ class OrderDataValidator extends \Magento\Payment\Gateway\Validator\AbstractVali
         $this->numberHelper = $numberHelper;
         $this->orderTotalCalculator = $orderTotalCalculator;
         $this->logger = $logger;
+        $this->debug = $debug;
 
         parent::__construct($resultFactory);
     }
@@ -105,6 +108,7 @@ class OrderDataValidator extends \Magento\Payment\Gateway\Validator\AbstractVali
      */
     public function validate(array $validationSubject)
     {
+        $this->debug->trace();
         $payment = $this->subjectReader->readPayment($validationSubject);
         $paymentAI = $this->subjectReader->readPaymentAdditionalInformation($validationSubject);
 

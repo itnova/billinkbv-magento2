@@ -2,6 +2,7 @@
 
 namespace Billink\Billink\Logger\Handler;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\DriverInterface;
 use Magento\Framework\Logger\Handler\Base;
 use Magento\Framework\Session\SessionManagerInterface;
@@ -13,7 +14,7 @@ use Monolog\Logger;
  */
 class BillinkTraces extends Base
 {
-    const DIR = '/var/log/billink/traces/';
+    const DIR = '/log/billink/traces/';
 
     /**
      * @var int
@@ -31,9 +32,15 @@ class BillinkTraces extends Base
     public function __construct(
         DriverInterface $filesystem,
         SessionManagerInterface $sessionManager,
+        DirectoryList $directoryList,
         $filePath = null,
         $fileName = null
     ) {
-        parent::__construct($filesystem, self::DIR . $sessionManager->getSessionId() . "/" . time() . ".log", $fileName);
+        parent::__construct(
+            $filesystem,
+            $directoryList->getPath(\Magento\Framework\App\Filesystem\DirectoryList::VAR_DIR)
+                . self::DIR . $sessionManager->getSessionId() . "/" . time() . ".log",
+            $fileName
+        );
     }
 }

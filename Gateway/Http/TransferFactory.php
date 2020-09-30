@@ -5,6 +5,7 @@ namespace Billink\Billink\Gateway\Http;
 use Billink\Billink\Gateway\Helper\Gateway as GatewayHelper;
 use Billink\Billink\Gateway\Helper\Xml as XmlHelper;
 use Billink\Billink\Gateway\Request\ActionDataBuilder;
+use Billink\Billink\Model\Debug;
 use Magento\Payment\Gateway\Http\TransferBuilder;
 use Magento\Payment\Gateway\Http\TransferFactoryInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
@@ -37,11 +38,13 @@ class TransferFactory implements TransferFactoryInterface
     public function __construct(
         TransferBuilder $transferBuilder,
         XmlHelper $xmlHelper,
-        GatewayHelper $gatewayHelper
+        GatewayHelper $gatewayHelper,
+        Debug $debug
     ) {
         $this->transferBuilder = $transferBuilder;
         $this->xmlHelper = $xmlHelper;
         $this->gatewayHelper = $gatewayHelper;
+        $this->debug = $debug;
     }
 
     /**
@@ -52,6 +55,8 @@ class TransferFactory implements TransferFactoryInterface
      */
     public function create(array $request)
     {
+        $this->debug->trace();
+
         $service = $request[ActionDataBuilder::SERVICE];
         unset($request[ActionDataBuilder::SERVICE]);
 

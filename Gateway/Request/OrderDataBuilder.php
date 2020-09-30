@@ -3,6 +3,7 @@
 namespace Billink\Billink\Gateway\Request;
 
 use Billink\Billink\Gateway\Helper\SubjectReader;
+use Billink\Billink\Model\Debug;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 
@@ -33,9 +34,10 @@ class OrderDataBuilder implements BuilderInterface
      */
     public function __construct(
         SubjectReader $subjectReader,
-        DateTime $datetime
+        DateTime $datetime,
+        Debug $debug
     ) {
-
+        $this->debug = $debug;
         $this->subjectReader = $subjectReader;
         $this->datetime = $datetime;
     }
@@ -48,6 +50,8 @@ class OrderDataBuilder implements BuilderInterface
      */
     public function build(array $buildSubject)
     {
+        $this->debug->trace();
+
         $payment = $this->subjectReader->readPayment($buildSubject);
         $validationFlag = $this->subjectReader->readValidationFlag($buildSubject);
 
