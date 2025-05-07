@@ -25,9 +25,9 @@ class CustomerDataBuilder implements BuilderInterface
     const STREET = 'STREET';
     const COUNTRYCODE = 'COUNTRYCODE';
     const CITY = 'CITY';
-    const SEX = 'SEX';
     const DEVICE = 'DEVICE';
     const BROWSER = 'BROWSER';
+    const REFERENCE = 'ADITIONALTEXT';
 
     /**
      * @var SubjectReader
@@ -94,15 +94,15 @@ class CustomerDataBuilder implements BuilderInterface
                 $this->subjectReader->readPaymentAIField(DataAssignObserver::HOUSE_EXTENSION, $buildSubject),
             self::IP => $orderData->getRemoteIp(),
             self::DEVICE => $headerData['platform'],
-            self::BROWSER => $headerData['browser'] . ' ' . $headerData['version']
+            self::BROWSER => $headerData['browser'] . ' ' . $headerData['version'],
+            self::REFERENCE => $this->subjectReader->readPaymentAIField(DataAssignObserver::REFERENCE, $buildSubject)
         ];
 
         if (WorkflowHelper::TYPE_PRIVATE === $workflowType) {
             $birthDate = $this->subjectReader->readPaymentAIField(DataAssignObserver::BIRTHDATE, $buildSubject);
 
             $result = array_merge($result, [
-                self::SEX => $this->subjectReader->readPaymentAIField(DataAssignObserver::SEX, $buildSubject),
-                self::BIRTHDATE => $this->dateTime->date('d-m-Y', $birthDate)
+                self::BIRTHDATE => $this->dateTime->date('d-m-Y', $birthDate .' 00:00:01')
             ]);
         }
 

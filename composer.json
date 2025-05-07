@@ -1,8 +1,8 @@
 {
-    "name": "billink/module-billink",
+    "name": "billinkbv/module-billink",
     "description": "Billink Service Payment Method",
     "type": "magento2-module",
-    "version": "1.2.0",
+    "version": "2.2.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
@@ -16,6 +16,7 @@
         }
     },
     "require": {
-        "magento/framework": "^102.0.0"
+        "php": ">=8.1",
+        "magento/framework": "103.0.*"
     }
 }
