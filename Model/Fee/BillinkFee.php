@@ -62,10 +62,6 @@ class BillinkFee
         $baseAmount = $this->getBaseAmount($quote);
         $baseAmountTax = $this->getBaseAmountTax($baseAmount, $quote);
 
-        if ($this->getFeeIncludesTax()) {
-            $baseAmount -= $baseAmountTax;
-        }
-
         $fee->setBaseAmount($baseAmount);
         $fee->setBaseAmountTax($baseAmountTax);
 
@@ -112,7 +108,7 @@ class BillinkFee
 
         $quoteTotal = $this->quoteHelper->getTotalInclTax($quote);
 
-        return $this->feeHelper->getFeeAmount($quoteTotal, $workflowType);
+        return $this->feeHelper->getFeeAmount($quoteTotal, $workflowType, $quote->getBillingAddress()->getCountryId());
     }
 
     /**

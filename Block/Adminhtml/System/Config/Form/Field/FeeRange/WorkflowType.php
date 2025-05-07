@@ -37,9 +37,8 @@ class WorkflowType extends Select
      */
     protected function _toHtml()
     {
-        $types = $this->workflowHelper->getTypes();
-
         if (!$this->getOptions()) {
+            $types = $this->workflowHelper->getTypes();
             foreach ($types as $type) {
                 $key = $this->workflowHelper->getOptionKey($type['value']);
 
@@ -51,12 +50,12 @@ class WorkflowType extends Select
     }
 
     /**
-     * Set element name
+     * Sets name for input element
      *
-     * @param $value string
+     * @param string $value
      * @return $this
      */
-    public function setInputName($value)
+    public function setInputName($value): static
     {
         return $this->setName($value);
     }

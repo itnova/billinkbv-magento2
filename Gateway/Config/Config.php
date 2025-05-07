@@ -2,6 +2,7 @@
 
 namespace Billink\Billink\Gateway\Config;
 
+use Billink\Billink\Model\Config\Source\UsedWorkflow;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository;
@@ -12,16 +13,12 @@ use Magento\Store\Model\Store\Interceptor;
  * Class Config
  * @package Billink\Billink\Gateway\Config
  */
-class Config extends \Magento\Payment\Gateway\Config\Config
+class Config extends BasePaymentConfig
 {
     const MEDIA_FOLDER = 'billink';
 
     const FIELD_API_VERSION = 'api_version';
-    const FIELD_ACTIVE = 'is_active';
     const FIELD_LOGO = 'logo';
-    const FIELD_ACCOUNT_NAME = 'account_name';
-    const FIELD_ACCOUNT_ID = 'account_id';
-    const FIELD_DEBUG = 'debug';
     const FIELD_BACKDOOR = 'debug_backdoor';
     const FIELD_WORKFLOW = 'workflow';
     const FIELD_ORDER_STATUS = 'order_status';
@@ -29,26 +26,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     const FIELD_ALLOW_SPECIFIC = 'allowspecific';
     const FIELD_SPECIFIC_COUNTRY = 'specificcountry';
     const FIELD_IS_TOTALCHECK_ACTIVE = 'is_totalcheck_active';
-    const FIELD_IS_FEE_ACTIVE = 'is_fee_active';
-    const FIELD_FEE_LABEL = 'fee_label';
-    const FIELD_FEE_TYPE = 'fee_type';
-    const FIELD_FEE_TAX_CLASS = 'fee_tax_class';
-    const FIELD_FEE_RANGE = 'fee_range';
     const FIELD_IS_INVOICE_EMAIL_ENABLED = 'is_invoice_email_enabled';
-
-    /**
-     * @var Repository
-     */
-    private $assetRepository;
+    const FIELD_USED_WORKFLOW = 'use_workflow';
 
     public function __construct(
         ScopeConfigInterface $scopeConfig,
-        Repository $assetRepository,
+        private readonly Repository $assetRepository,
         $methodCode = null,
         $pathPattern = \Magento\Payment\Gateway\Config\Config::DEFAULT_PATH_PATTERN
     ) {
         \Magento\Payment\Gateway\Config\Config::__construct($scopeConfig, $methodCode, $pathPattern);
-        $this->assetRepository = $assetRepository;
     }
 
     /**
@@ -60,14 +47,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @return bool
-     */
-    public function isActive()
-    {
-        return (bool)$this->getValue(self::FIELD_ACTIVE);
-    }
-
-    /**
      * @param Interceptor|null $store
      * @return string
      */
@@ -76,7 +55,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $value = $this->getValue(self::FIELD_LOGO);
 
         if (!$value) {
-            return $this->assetRepository->getUrl('Billink_Billink::images/logo.png');
+            return $this->assetRepository->getUrl('Billink_Billink::images/billink-logo-default.svg');
         }
 
         if ($store instanceof Store) {
@@ -91,30 +70,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * @return string
      */
-    public function getAccountName()
-    {
-        return $this->getValue(self::FIELD_ACCOUNT_NAME);
-    }
-
-    /**
-     * @return string
-     */
-    public function getAccountId()
-    {
-        return $this->getValue(self::FIELD_ACCOUNT_ID);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isDebugMode()
-    {
-        return (bool)$this->getValue(self::FIELD_DEBUG);
-    }
-
-    /**
-     * @return string
-     */
     public function getBackdoorOption()
     {
         return $this->getValue(self::FIELD_BACKDOOR);
@@ -123,19 +78,38 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * @return array
      */
-    public function getWorkflow()
+    public function getWorkflow($storeId = null)
     {
-        $result = json_decode($this->getValue(self::FIELD_WORKFLOW), true);
+        $workflowSettings = json_decode($this->getValue(self::FIELD_WORKFLOW), true);
 
-        if (!is_array($result) || empty($result)) {
+        if (!is_array($workflowSettings) || empty($workflowSettings)) {
             return [];
         }
 
-        foreach ($result as $key => $workflow) {
-            $result[$key]['type'] = __($workflow['type']);
+        $availableWorkflows = $this->getUsedWorkflow($storeId);
+
+        switch ($availableWorkflows) {
+            case UsedWorkflow::CONFIG_WORKFLOW_PRIVATE:
+                if(isset($workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_PRIVATE])) {
+                    $workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_PRIVATE]['type'] = __($workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_PRIVATE]['type']);
+
+                    return [UsedWorkflow::CONFIG_WORKFLOW_PRIVATE => $workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_PRIVATE]];
+                }
+                return [];
+            case UsedWorkflow::CONFIG_WORKFLOW_BUSINESS:
+                if(isset($workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_BUSINESS])) {
+                    $workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_BUSINESS]['type'] = __($workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_BUSINESS]['type']);
+
+                    return [UsedWorkflow::CONFIG_WORKFLOW_BUSINESS => $workflowSettings[UsedWorkflow::CONFIG_WORKFLOW_BUSINESS]];
+                }
+                return [];
+            default:
+                foreach ($workflowSettings as $key => $workflow) {
+                    $workflowSettings[$key]['type'] = __($workflow['type']);
+                }
         }
 
-        return $result;
+        return $workflowSettings;
     }
 
     /**
@@ -179,51 +153,20 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @return string
-     */
-    public function getIsFeeActive()
-    {
-        return (bool)$this->getValue(self::FIELD_IS_FEE_ACTIVE);
-    }
-
-    /**
-     * @return string|\Magento\Framework\Phrase
-     */
-    public function getFeeLabel()
-    {
-        return $this->getValue(self::FIELD_FEE_LABEL) ?: __('Billink Service Fee');
-    }
-
-    /**
-     * @return string
-     */
-    public function getFeeType()
-    {
-        return $this->getValue(self::FIELD_FEE_TYPE);
-    }
-
-    /**
-     * @return string
-     */
-    public function getFeeTaxClass()
-    {
-        return $this->getValue(self::FIELD_FEE_TAX_CLASS);
-    }
-
-    /**
-     * @return array
-     */
-    public function getFeeRange()
-    {
-        return json_decode($this->getValue(self::FIELD_FEE_RANGE), true);
-    }
-
-    /**
      * @param int $storeId
      * @return bool
      */
     public function getIsInvoiceEmailEnabled($storeId = null)
     {
         return !!$this->getValue(self::FIELD_IS_INVOICE_EMAIL_ENABLED, $storeId);
+    }
+
+    /**
+     * @param int $storeId
+     * @return ?string
+     */
+    public function getUsedWorkflow($storeId = null)
+    {
+        return $this->getValue(self::FIELD_USED_WORKFLOW, $storeId);
     }
 }
